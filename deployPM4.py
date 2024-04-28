@@ -11,10 +11,10 @@ with open('site-config.json') as config_file:
 # Prompt for user input
 name = input("Enter the device name: ")
 topic_prefix = input("Enter the MQTT topic prefix: ")
-ip_address = input("Enter the IP address of the target device: ")
+host = input("Enter the IP address or hostname of the target device: ")
 
 # Construct the base URL for the device
-base_url = f"http://{ip_address}/rpc"
+base_url = f"http://{host}/rpc"
 
 SYMBOLS_IN_CHUNK = 1024
 
@@ -25,7 +25,7 @@ def put_chunk(host, id_, data, append=True):
     res = requests.post(url, data=req_data.encode("utf-8"), timeout=2)
     return res.json()
 
-def upload_script_code(base_url, script_id, script_code):
+def upload_script_code(host, script_id, script_code):
     pos = 0
     append = False
     total_size = len(script_code)
@@ -37,7 +37,7 @@ def upload_script_code(base_url, script_id, script_code):
     while pos < len(script_code):
         chunk = script_code[pos : pos + SYMBOLS_IN_CHUNK]
         chunk_size = len(chunk)
-        response = put_chunk(base_url, script_id, chunk, append)
+        response = put_chunk(host, script_id, chunk, append)
         
         if response.get("success"):
             uploaded_size += chunk_size
@@ -162,7 +162,7 @@ while True:
             print(f"Gang script creation failed with status code: {response.status_code}")
 
         # Upload the "gang" script code
-        upload_script_code(base_url, gang_script_id, gang_script)
+        upload_script_code(host, gang_script_id, gang_script)
 
         # Create the "add" script
         add_script_url = f"{base_url}/Script.Create?name={gang_name}-add"
@@ -177,7 +177,7 @@ while True:
             print(f"Add script creation failed with status code: {response.status_code}")
 
         # Upload the "add" script code
-        upload_script_code(base_url, add_script_id, add_script)
+        upload_script_code(host, add_script_id, add_script)
 
         # Set the default state of the gang using Switch.SetConfig
         for switch_id in ganged_ids:
