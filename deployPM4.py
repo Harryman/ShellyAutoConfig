@@ -15,6 +15,35 @@ ip_address = input("Enter the IP address of the target device: ")
 # Construct the base URL for the device
 base_url = f"http://{ip_address}/rpc"
 
+def upload_script_code(base_url, script_id, script_code):
+    chunk_size = 1024
+    script_code_bytes = script_code.encode('utf-8')
+    total_size = len(script_code_bytes)
+    
+    if total_size <= chunk_size:
+        # Upload the entire script code in a single request
+        script_code_url = f"{base_url}/Script.PutCode?id={script_id}&code={script_code}"
+        response = requests.get(script_code_url)
+        if response.status_code == 200:
+            print(f"Script code uploaded successfully (Size: {total_size} bytes)")
+        else:
+            print(f"Script code upload failed with status code: {response.status_code}")
+    else:
+        # Split the code into chunks and upload each chunk separately
+        chunks = [script_code_bytes[i:i+chunk_size] for i in range(0, total_size, chunk_size)]
+        for i, chunk in enumerate(chunks):
+            append = 'true' if i > 0 else 'false'
+            script_code_url = f"{base_url}/Script.PutCode?id={script_id}&code={chunk.decode('utf-8')}&append={append}"
+            response = requests.get(script_code_url)
+            if response.status_code == 200:
+                print(f"Chunk {i+1}/{len(chunks)} uploaded successfully (Size: {len(chunk)} bytes)")
+            else:
+                print(f"Chunk {i+1}/{len(chunks)} upload failed with status code: {response.status_code}")
+                break
+        else:
+            print(f"Script code uploaded successfully (Total Size: {total_size} bytes)")
+
+
 # Configure system settings
 sys_config = {
     "device": {
@@ -87,9 +116,7 @@ for switch_id in range(4):
     else:
         print(f"Switch {switch_id} configuration failed with status code:", response.status_code)
 
-# Prompt for ganged inputs
-while True:
-    ganged_inputs = input("Are there any inputs to be ganged? (y/n): ")
+ ganged_inputs = input("Are there any inputs to be ganged? (y/n): ")
 
     if ganged_inputs.lower() == 'y':
         gang_name = input("Gang name: ")
@@ -121,30 +148,7 @@ while True:
             print(f"Gang script creation failed with status code: {response.status_code}")
 
         # Upload the "gang" script code
-        gang_script_code = gang_script.encode('utf-8')
-        chunk_size = 1024
-        if len(gang_script_code) > chunk_size:
-            # Split the code into chunks
-            chunks = [gang_script_code[i:i+chunk_size] for i in range(0, len(gang_script_code), chunk_size)]
-            for i, chunk in enumerate(chunks):
-                append = 'true' if i > 0 else 'false'
-                gang_script_code_url = f"{base_url}/Script.PutCode?id={gang_script_id}&code={chunk.decode('utf-8')}&append={append}"
-                response = requests.get(gang_script_code_url)
-                if response.status_code != 200:
-                    print(f"Gang script code upload failed for chunk {i+1} with status code: {response.status_code}")
-                    break
-            else:
-                print("Gang script code uploaded successfully")
-        else:
-            gang_script_code_url = f"{base_url}/Script.PutCode?id={gang_script_id}&code={gang_script_code.decode('utf-8')}"
-            response = requests.get(gang_script_code_url)
-            if response.status_code == 200:
-                try:
-                    print("Gang script code uploaded successfully")
-                except json.JSONDecodeError:
-                    print("Gang script code upload response:", response.text)
-            else:
-                print(f"Gang script code upload failed with status code: {response.status_code}")
+        upload_script_code(base_url, gang_script_id, gang_script)
 
         # Create the "add" script
         add_script_url = f"{base_url}/Script.Create?name={gang_name}-add"
@@ -159,29 +163,7 @@ while True:
             print(f"Add script creation failed with status code: {response.status_code}")
 
         # Upload the "add" script code
-        add_script_code = add_script.encode('utf-8')
-        if len(add_script_code) > chunk_size:
-            # Split the code into chunks
-            chunks = [add_script_code[i:i+chunk_size] for i in range(0, len(add_script_code), chunk_size)]
-            for i, chunk in enumerate(chunks):
-                append = 'true' if i > 0 else 'false'
-                add_script_code_url = f"{base_url}/Script.PutCode?id={add_script_id}&code={chunk.decode('utf-8')}&append={append}"
-                response = requests.get(add_script_code_url)
-                if response.status_code != 200:
-                    print(f"Add script code upload failed for chunk {i+1} with status code: {response.status_code}")
-                    break
-            else:
-                print("Add script code uploaded successfully")
-        else:
-            add_script_code_url = f"{base_url}/Script.PutCode?id={add_script_id}&code={add_script_code.decode('utf-8')}"
-            response = requests.get(add_script_code_url)
-            if response.status_code == 200:
-                try:
-                    print("Add script code uploaded successfully")
-                except json.JSONDecodeError:
-                    print("Add script code upload response:", response.text)
-            else:
-                print(f"Add script code upload failed with status code: {response.status_code}")
+        upload_script_code(base_url, add_script_id, add_script)
 
         # Set the default state of the gang using Switch.SetConfig
         for switch_id in ganged_ids:
@@ -201,6 +183,7 @@ while True:
 
     else:
         break
+
 
 # Reboot the device
 reboot_url = f"{base_url}/Shelly.Reboot"
