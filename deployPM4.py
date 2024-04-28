@@ -38,23 +38,13 @@ def upload_script_code(host, script_id, script_code):
         chunk = script_code[pos : pos + SYMBOLS_IN_CHUNK]
         chunk_size = len(chunk)
         response = put_chunk(host, script_id, chunk, append)
-        
-        if response.status_code == 200:
-            uploaded_size += chunk_size
-            progress = (uploaded_size / total_size) * 100
-            print(f"Uploaded {uploaded_size} bytes ({progress:.2f}%)")
-        else:
-            print("Upload failed. Error:", response.get("error"))
-            break
-        
+        print(f"Uploaded: {response.len} bytes")
         pos += chunk_size
         append = True
     
     if uploaded_size == total_size:
         print("Script uploaded successfully!")
-    else:
-        print("Upload incomplete.")
-
+        
 # Configure system settings
 sys_config = {
     "device": {
