@@ -39,7 +39,7 @@ def upload_script_code(host, script_id, script_code):
         chunk_size = len(chunk)
         response = put_chunk(host, script_id, chunk, append)
         
-        if response.get("success"):
+        if response.status_code == 200:
             uploaded_size += chunk_size
             progress = (uploaded_size / total_size) * 100
             print(f"Uploaded {uploaded_size} bytes ({progress:.2f}%)")
