@@ -125,7 +125,6 @@ while True:
         ganged_ids = input("Which inputs are ganged together? [1-4]: ")
         ganged_ids = [int(id) - 1 for id in ganged_ids.split(',')]
         default_state = input("Default state for the gang (on/off): ")
-        start_script = input("Start the script? (Y/n): ").lower() or 'y'
         enable_script = input("Enable the script by default? (Y/n): ").lower() or 'y'
 
         # Load Jinja2 templates from files
@@ -211,28 +210,6 @@ while True:
                 print("Add script configuration response:", response.text)
         else:
             print(f"Add script configuration failed with status code: {response.status_code}")
-
-        # Start the scripts if requested
-        if start_script == 'y':
-            gang_script_start_url = f"{base_url}/Script.Start?id={gang_script_id}"
-            response = requests.get(gang_script_start_url)
-            if response.status_code == 200:
-                try:
-                    print(f"Gang script started successfully")
-                except json.JSONDecodeError:
-                    print("Gang script start response:", response.text)
-            else:
-                print(f"Gang script start failed with status code: {response.status_code}")
-
-            add_script_start_url = f"{base_url}/Script.Start?id={add_script_id}"
-            response = requests.get(add_script_start_url)
-            if response.status_code == 200:
-                try:
-                    print(f"Add script started successfully")
-                except json.JSONDecodeError:
-                    print("Add script start response:", response.text)
-            else:
-                print(f"Add script start failed with status code: {response.status_code}")
 
     else:
         break
