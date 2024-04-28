@@ -19,31 +19,36 @@ def upload_script_code(base_url, script_id, script_code):
     chunk_size = 1024
     script_code_bytes = script_code.encode('utf-8')
     total_size = len(script_code_bytes)
-    
+
     if total_size <= chunk_size:
         # Upload the entire script code in a single request
-        script_code_url = f"{base_url}/Script.PutCode?id={script_id}&code={script_code}"
-        response = requests.get(script_code_url)
+        url = f"{base_url}/rpc/Script.PutCode"
+        req = {"id": script_id, "code": script_code}
+        req_data = json.dumps(req, ensure_ascii=False)
+        response = requests.post(url, data=req_data.encode("utf-8"), timeout=2)
         if response.status_code == 200:
             print(f"Script code uploaded successfully (Size: {total_size} bytes)")
         else:
             print(f"Script code upload failed with status code: {response.status_code}")
     else:
         # Split the code into chunks and upload each chunk separately
-        chunks = [script_code_bytes[i:i+chunk_size] for i in range(0, total_size, chunk_size)]
-        for i, chunk in enumerate(chunks):
-            append = 'true' if i > 0 else 'false'
-            script_code_url = f"{base_url}/Script.PutCode?id={script_id}&code={chunk.decode('utf-8')}&append={append}"
-            response = requests.get(script_code_url)
+        pos = 0
+        append = False
+        while pos < total_size:
+            chunk = script_code_bytes[pos : pos + chunk_size].decode('utf-8')
+            url = f"{base_url}/rpc/Script.PutCode"
+            req = {"id": script_id, "code": chunk, "append": append}
+            req_data = json.dumps(req, ensure_ascii=False)
+            response = requests.post(url, data=req_data.encode("utf-8"), timeout=2)
             if response.status_code == 200:
-                print(f"Chunk {i+1}/{len(chunks)} uploaded successfully (Size: {len(chunk)} bytes)")
+                print(f"Chunk uploaded successfully (Size: {len(chunk)} bytes)")
             else:
-                print(f"Chunk {i+1}/{len(chunks)} upload failed with status code: {response.status_code}")
+                print(f"Chunk upload failed with status code: {response.status_code}")
                 break
+            pos += len(chunk)
+            append = True
         else:
             print(f"Script code uploaded successfully (Total Size: {total_size} bytes)")
-
-
 # Configure system settings
 sys_config = {
     "device": {
