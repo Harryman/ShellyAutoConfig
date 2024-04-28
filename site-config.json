@@ -1,0 +1,23 @@
+{
+    "location": {
+      "tz": "Africa/Nairobi",
+      "lat": 11.757459,
+      "lon": 42.792298
+    },
+    "wifi": {
+      "sta": {
+        "ssid": "LS-IOT",
+        "pass": "ci7G6K684zPxptwbCt",
+        "enable": true
+      }
+    },
+    "mqtt": {
+      "server": "192.168.0.20:1883",
+      "user": null,
+      "ssl_ca": null,
+      "rpc_ntf": true,
+      "status_ntf": false,
+      "use_client_cert": false,
+      "enable_control": true
+    }
+  }
