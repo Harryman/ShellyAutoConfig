@@ -2,6 +2,7 @@ import requests
 import json
 import time
 from jinja2 import Template
+from argparse import ArgumentParser
 
 # Load configurations from site-config.json
 with open('site-config.json') as config_file:
@@ -15,40 +16,45 @@ ip_address = input("Enter the IP address of the target device: ")
 # Construct the base URL for the device
 base_url = f"http://{ip_address}/rpc"
 
-def upload_script_code(base_url, script_id, script_code):
-    chunk_size = 1024
-    script_code_bytes = script_code.encode('utf-8')
-    total_size = len(script_code_bytes)
+SYMBOLS_IN_CHUNK = 1024
 
-    if total_size <= chunk_size:
-        # Upload the entire script code in a single request
-        url = f"{base_url}/rpc/Script.PutCode"
-        req = {"id": script_id, "code": script_code}
-        req_data = json.dumps(req, ensure_ascii=False)
-        response = requests.post(url, data=req_data.encode("utf-8"), timeout=2)
-        if response.status_code == 200:
-            print(f"Script code uploaded successfully (Size: {total_size} bytes)")
+def put_chunk(host, id_, data, append=True):
+    url = f"http://{host}/rpc/Script.PutCode"
+    req = {"id": id_, "code": data, "append": append}
+    req_data = json.dumps(req, ensure_ascii=False)
+    res = requests.post(url, data=req_data.encode("utf-8"), timeout=2)
+    return res.json()
+
+def upload_script_code(base_url, script_id, script_code):
+    pos = 0
+    append = False
+    total_size = len(script_code)
+    uploaded_size = 0
+
+    print(f"Total size: {total_size} bytes")
+    print("Uploading script...")
+
+    while pos < len(script_code):
+        chunk = script_code[pos : pos + SYMBOLS_IN_CHUNK]
+        chunk_size = len(chunk)
+        response = put_chunk(base_url, script_id, chunk, append)
+        
+        if response.get("success"):
+            uploaded_size += chunk_size
+            progress = (uploaded_size / total_size) * 100
+            print(f"Uploaded {uploaded_size} bytes ({progress:.2f}%)")
         else:
-            print(f"Script code upload failed with status code: {response.status_code}")
+            print("Upload failed. Error:", response.get("error"))
+            break
+        
+        pos += chunk_size
+        append = True
+    
+    if uploaded_size == total_size:
+        print("Script uploaded successfully!")
     else:
-        # Split the code into chunks and upload each chunk separately
-        pos = 0
-        append = False
-        while pos < total_size:
-            chunk = script_code_bytes[pos : pos + chunk_size].decode('utf-8')
-            url = f"{base_url}/rpc/Script.PutCode"
-            req = {"id": script_id, "code": chunk, "append": append}
-            req_data = json.dumps(req, ensure_ascii=False)
-            response = requests.post(url, data=req_data.encode("utf-8"), timeout=2)
-            if response.status_code == 200:
-                print(f"Chunk uploaded successfully (Size: {len(chunk)} bytes)")
-            else:
-                print(f"Chunk upload failed with status code: {response.status_code}")
-                break
-            pos += len(chunk)
-            append = True
-        else:
-            print(f"Script code uploaded successfully (Total Size: {total_size} bytes)")
+        print("Upload incomplete.")
+
 # Configure system settings
 sys_config = {
     "device": {
