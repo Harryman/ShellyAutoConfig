@@ -116,13 +116,17 @@ for switch_id in range(4):
     else:
         print(f"Switch {switch_id} configuration failed with status code:", response.status_code)
 
- ganged_inputs = input("Are there any inputs to be ganged? (y/n): ")
+# Prompt for ganged inputs
+while True:
+    ganged_inputs = input("Are there any inputs to be ganged? (y/n): ")
 
     if ganged_inputs.lower() == 'y':
         gang_name = input("Gang name: ")
         ganged_ids = input("Which inputs are ganged together? [1-4]: ")
         ganged_ids = [int(id) - 1 for id in ganged_ids.split(',')]
         default_state = input("Default state for the gang (on/off): ")
+        start_script = input("Start the script? (Y/n): ").lower() or 'y'
+        enable_script = input("Enable the script by default? (Y/n): ").lower() or 'y'
 
         # Load Jinja2 templates from files
         with open('ShellyScripts/ganged.js', 'r') as f:
@@ -181,9 +185,57 @@ for switch_id in range(4):
             else:
                 print(f"Setting default state for switch {switch_id} failed with status code: {response.status_code}")
 
+        # Set the script configuration (enable and start)
+        gang_script_config = {
+            "enable": enable_script == 'y'
+        }
+        gang_script_config_url = f"{base_url}/Script.SetConfig?id={gang_script_id}&config={json.dumps(gang_script_config)}"
+        response = requests.get(gang_script_config_url)
+        if response.status_code == 200:
+            try:
+                print(f"Gang script configuration set successfully")
+            except json.JSONDecodeError:
+                print("Gang script configuration response:", response.text)
+        else:
+            print(f"Gang script configuration failed with status code: {response.status_code}")
+
+        add_script_config = {
+            "enable": enable_script == 'y'
+        }
+        add_script_config_url = f"{base_url}/Script.SetConfig?id={add_script_id}&config={json.dumps(add_script_config)}"
+        response = requests.get(add_script_config_url)
+        if response.status_code == 200:
+            try:
+                print(f"Add script configuration set successfully")
+            except json.JSONDecodeError:
+                print("Add script configuration response:", response.text)
+        else:
+            print(f"Add script configuration failed with status code: {response.status_code}")
+
+        # Start the scripts if requested
+        if start_script == 'y':
+            gang_script_start_url = f"{base_url}/Script.Start?id={gang_script_id}"
+            response = requests.get(gang_script_start_url)
+            if response.status_code == 200:
+                try:
+                    print(f"Gang script started successfully")
+                except json.JSONDecodeError:
+                    print("Gang script start response:", response.text)
+            else:
+                print(f"Gang script start failed with status code: {response.status_code}")
+
+            add_script_start_url = f"{base_url}/Script.Start?id={add_script_id}"
+            response = requests.get(add_script_start_url)
+            if response.status_code == 200:
+                try:
+                    print(f"Add script started successfully")
+                except json.JSONDecodeError:
+                    print("Add script start response:", response.text)
+            else:
+                print(f"Add script start failed with status code: {response.status_code}")
+
     else:
         break
-
 
 # Reboot the device
 reboot_url = f"{base_url}/Shelly.Reboot"
