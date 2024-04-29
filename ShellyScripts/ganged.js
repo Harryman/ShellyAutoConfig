@@ -34,6 +34,7 @@ function printStatus(status) {
             let id = Shelly.getComponentStatus("switch", ids[i]);
             if(out.output !== id.output && out.output !== null){  
                 out.error =true;
+            }
             out.output = id.output;  
             out.apower += id.apower;
             out.voltage += id.voltage;
