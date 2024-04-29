@@ -38,7 +38,7 @@ def upload_script_code(host, script_id, script_code):
         chunk = script_code[pos : pos + SYMBOLS_IN_CHUNK]
         chunk_size = len(chunk)
         response = put_chunk(host, script_id, chunk, append)
-        print(f"Uploaded: {response.len} bytes")
+        print(f"Uploaded: {response['len']} bytes")
         pos += chunk_size
         append = True
     
@@ -195,23 +195,4 @@ if response.status_code == 200:
 else:
     print("Reboot failed with status code:", response.status_code)
 
-print("Configuration complete. Waiting for the device to reboot...")
-# Delay for 10 seconds to allow the device to reboot
-time.sleep(15)
-
-# Check the reboot status
-status_url = f"{base_url}/Shelly.GetStatus"
-response = requests.get(status_url)
-if response.status_code == 200:
-    try:
-        status = response.json()
-        if status['uptime'] < 15:
-            print("Device successfully rebooted")
-        else:
-            print("Device reboot failed")
-    except json.JSONDecodeError:
-        print("Reboot status check failed")
-else:
-    print("Reboot status check failed with status code:", response.status_code)
-
-print("Configuration and reboot process finished.")
+print("Configuration complete. Rebooting")
