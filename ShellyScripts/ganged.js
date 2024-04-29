@@ -18,6 +18,8 @@ function ganged(topic,message){
 //adding function
 function printStatus(status) {
     let out = {
+        output: null,
+        error: false,
         apower: 0,
         voltage: 0,
         current: 0,
@@ -30,6 +32,9 @@ function printStatus(status) {
     if (status.name === "switch" && status.id === ids[0]) {
         for (let i = 0; i < ids.length; i++) {
             let id = Shelly.getComponentStatus("switch", ids[i]);
+            if(out.output !== id.output && out.output !== null){  
+                out.error =true;
+            out.output = id.output;  
             out.apower += id.apower;
             out.voltage += id.voltage;
             out.current += id.current;
