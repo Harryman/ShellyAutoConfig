@@ -132,12 +132,8 @@ while True:
         with open('ShellyScripts/ganged.js', 'r') as f:
             gang_template = Template(f.read())
 
-        with open('ShellyScripts/add.js', 'r') as f:
-            add_template = Template(f.read())
-
         # Create scripts
         gang_script = gang_template.render(gang_name=gang_name, ganged_ids=ganged_ids)
-        add_script = add_template.render(gang_name=gang_name, ganged_ids=ganged_ids)
 
         # Create the "gang" script
         gang_script_url = f"{base_url}/Script.Create?name={gang_name}-ganged"
@@ -154,27 +150,12 @@ while True:
         # Upload the "gang" script code
         upload_script_code(host, gang_script_id, gang_script)
 
-        # Create the "add" script
-        add_script_url = f"{base_url}/Script.Create?name={gang_name}-add"
-        response = requests.get(add_script_url)
-        if response.status_code == 200:
-            try:
-                add_script_id = response.json()['id']
-                print(f"Add script created with ID: {add_script_id}")
-            except json.JSONDecodeError:
-                print("Add script creation response:", response.text)
-        else:
-            print(f"Add script creation failed with status code: {response.status_code}")
-
-        # Upload the "add" script code
-        upload_script_code(host, add_script_id, add_script)
-
         # Set the default state of the gang using Switch.SetConfig
         for switch_id in ganged_ids:
             switch_config = {
                 "in_mode": "detached",
                 "initial_state": default_state,
-                "name": f"{gang_name}{switch_id}
+                "name": f"{gang_name}{switch_id+1}"
             }
             switch_url = f"{base_url}/Switch.SetConfig?id={switch_id}&config={json.dumps(switch_config)}"
             response = requests.get(switch_url)
@@ -199,20 +180,6 @@ while True:
                 print("Gang script configuration response:", response.text)
         else:
             print(f"Gang script configuration failed with status code: {response.status_code}")
-
-        add_script_config = {
-            "enable": enable_script == 'y'
-        }
-        add_script_config_url = f"{base_url}/Script.SetConfig?id={add_script_id}&config={json.dumps(add_script_config)}"
-        response = requests.get(add_script_config_url)
-        if response.status_code == 200:
-            try:
-                print(f"Add script configuration set successfully")
-            except json.JSONDecodeError:
-                print("Add script configuration response:", response.text)
-        else:
-            print(f"Add script configuration failed with status code: {response.status_code}")
-
     else:
         break
 
@@ -230,7 +197,7 @@ else:
 
 print("Configuration complete. Waiting for the device to reboot...")
 # Delay for 10 seconds to allow the device to reboot
-time.sleep(10)
+time.sleep(15)
 
 # Check the reboot status
 status_url = f"{base_url}/Shelly.GetStatus"
