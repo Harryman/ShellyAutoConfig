@@ -173,7 +173,8 @@ while True:
         for switch_id in ganged_ids:
             switch_config = {
                 "in_mode": "detached",
-                "initial_state": default_state
+                "initial_state": default_state,
+                "name": f"{gang_name}{switch_id}
             }
             switch_url = f"{base_url}/Switch.SetConfig?id={switch_id}&config={json.dumps(switch_config)}"
             response = requests.get(switch_url)

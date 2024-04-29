@@ -1,10 +1,6 @@
 let gang = "{{ gang_name }}";
 let ids = {{ ganged_ids }};
 
-for(i in ids){
-    Shelly.call("Switch.SetConfig",{'id': ids[i],'name': gang});
-}
-
 function ganged(topic,message){
     if(message === "on"){
         for(i in ids){
