@@ -5,11 +5,17 @@
       "lon": 42.792298
     },
     "wifi": {
+      "ap": {
+        "enable":false
+       },
       "sta": {
         "ssid": "LS-IOT",
         "pass": "ci7G6K684zPxptwbCt",
         "enable": true
       }
+    },
+    "ble": {
+      "enable": false
     },
     "mqtt": {
       "server": "192.168.0.20:1883",

@@ -76,6 +76,17 @@ if response.status_code == 200:
 else:
     print("WiFi configuration failed with status code:", response.status_code)
 
+# Configure BLE settings
+ble_config = config['ble']
+ble_url = f"{base_url}/BLE.SetConfig?config={json.dumps(ble_config)}"
+print("BLE configuration request:", ble_url)
+response = requests.get(ble_url)
+if response.status_code == 200:
+    try:
+        print("BLE configuration response:", response.json())
+    except json.JSONDecodeError:
+        print("BLE configuration response:", response.text)
+
 # Configure MQTT settings
 mqtt_config = {
     "enable": True,
